@@ -1,10 +1,9 @@
-from rosetta_entity_resolution import resolve_entity, similarity_score
+# test du moteur de résolution d'entités Rosetta
+from rosetta_entity_resolution.resolver import resolve_entity
 
-def test_exact_match():
-    r = resolve_entity("Airbus SE", ["Airbus SE", "Boeing", "Safran"])
-    assert r.result["match"] == "Airbus SE"
-    assert r.result["score"] == 1.0
-
-def test_partial_match():
-    score = similarity_score("Airbus Operations", "Airbus SE")
-    assert score > 0.0
+def test_resolve_entity():
+    contract = resolve_entity("Airbus SAS", ["Airbus SE", "TotalEnergies"])
+    assert contract is not None
+    assert contract.result["best_match"] == "Airbus SE"
+    assert contract.result["match_confidence"] > 0.5
+    assert len(contract.evidence) >= 1
