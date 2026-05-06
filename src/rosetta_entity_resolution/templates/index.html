@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROSETTA — Entity Resolution & Fuzzy Matching</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1120;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-color: #a855f7;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            background-image: radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.12) 0%, transparent 50%);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #a855f7, #7e22ce);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+
+        .logo-title { font-size: 1.3rem; font-weight: 700; }
+        .logo-subtitle { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-label { color: var(--text-muted); }
+        .info-val { font-weight: 600; text-align: right; }
+
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🔠</div>
+            <div>
+                <div class="logo-title">ROSETTA</div>
+                <div class="logo-subtitle">Résolution d'Entités & Dédoublonnage Flou</div>
+            </div>
+        </div>
+        <div class="badge">ENTITY RESOLVER ONLINE</div>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">Résolution d'Entité</div>
+            <div class="info-row"><span class="info-label">Requête Entité</span><span class="info-val" id="rQuery">-</span></div>
+            <div class="info-row"><span class="info-label">Meilleure Correspondance</span><span class="info-val" id="rMatch" style="color:#c084fc;">-</span></div>
+            <div class="info-row"><span class="info-label">Score de Similarité</span><span class="info-val" id="rScore">-</span></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Candidats Évalués</div>
+            <div id="candidatesList">Chargement des candidats...</div>
+        </div>
+    </div>
+
+    <script>
+        async function analyserEntite() {
+            try {
+                const response = await fetch('/api/v1/resolve?name=Airbus%20SAS');
+                const contract = await response.json();
+                const r = contract.result;
+
+                document.getElementById('rQuery').textContent = r.query || '-';
+                document.getElementById('rMatch').textContent = r.best_match || '-';
+                document.getElementById('rScore').textContent = `${(r.match_confidence * 100).toFixed(0)}%`;
+
+                const list = document.getElementById('candidatesList');
+                list.innerHTML = '';
+
+                (r.matches_breakdown || []).forEach(m => {
+                    list.innerHTML += `
+                        <div class="info-row">
+                            <span class="info-label">${m.candidate}</span>
+                            <span class="info-val" style="color:#c084fc;">${(m.similarity_score * 100).toFixed(0)}%</span>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Erreur lors de la résolution d'entités Rosetta.");
+            }
+        }
+
+        window.onload = analyserEntite;
+    </script>
+</body>
+</html>
